@@ -3,21 +3,18 @@ import smtplib
 import logging
 from email.message import EmailMessage
 
-from settings import ARCHIVE_NAME
 
-
-def find_or_create_archive(sp, user_id):
-    archive = get_playlist_by_name(sp, user_id, playlist_name=ARCHIVE_NAME)
+def find_or_create_archive(sp, user_id, output_playlist):
+    archive = get_playlist_by_name(sp, user_id, playlist_name=output_playlist)
     if archive:
         return archive
 
     return create_archive(sp, user_id)
 
 
-def create_archive(sp, user_id):
-    name = ARCHIVE_NAME
+def create_archive(sp, user_id, output_playlist):
     description = 'A copy of your discovery weekly'
-    return sp.user_playlist_create(user=user_id, name=name, public=False)
+    return sp.user_playlist_create(user=user_id, name=output_playlist, public=False)
 
 
 def email_results():
@@ -27,7 +24,7 @@ def email_results():
     sent_from = gmail_user
     to = gmail_user
     email_text = """\
-        Songs added here
+        New Songs added to playlist
         """
     try:
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
@@ -68,6 +65,7 @@ def get_track_uris_by_playlist_name(
     user_playlist = get_playlist_by_name(sp, user_id, playlist_name)
 
     if not user_playlist:
+        logging.info('{} playlist not found'.format(playlist_name))
         return []
 
     # get track uris in playlist
