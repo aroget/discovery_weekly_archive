@@ -1,13 +1,8 @@
-import spotipy
 import logging
 import sys
 
-from spotipy.oauth2 import SpotifyOAuth
-
-from settings import SCOPE, ARCHIVE_NAME
 from helpers import (
-    create_archive,
-    get_playlist_by_name,
+    authenticate,
     find_or_create_archive,
     get_track_uris_by_playlist_name,
 )
@@ -20,20 +15,10 @@ logging.basicConfig(
 logging.getLogger('apscheduler').setLevel(logging.ERROR)
 
 
+
 def run(username, source_playlist, output_playlist):
     try:
-        oauth_manager = SpotifyOAuth(username=username, scope=SCOPE)
-        sp = spotipy.Spotify(oauth_manager=oauth_manager)
-        user = sp.current_user()
-
-        token_expired = oauth_manager.is_token_expired(
-            oauth_manager.get_cached_token())
-
-        if token_expired:
-            # refresh token
-            logging.debug('Refreshing token for user {}'.format(user['id']))
-            oauth_manager.refresh_access_token(
-                oauth_manager.get_cached_token()['refresh_token'])
+        oauth_manager, sp, user = authenticate(username)
 
         # create archive playlist
         archive = find_or_create_archive(
